@@ -3,6 +3,7 @@
 #######################################
 
 PCF2123 KEYWORD1
+PCF2123_CtrlReg KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)

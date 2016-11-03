@@ -26,47 +26,47 @@
 
 #define SPI_MAX_SPEED 5000000
 
-#define CMD_READ 1
+#define CMD_READ  1
 #define CMD_WRITE 0
-#define CMD_BYTE(RW, ADDR) (0x10 | ((!!(RW)) << 7) | (ADDR))
+#define CMD_BYTE(RW, ADDR) (0x10 | ((!!(RW)) << 7) | (ADDR))
 
-#define REG_CTRL1_ADDR      0x00
-#define REG_CTRL2_ADDR      0x01
-#define REG_TIME_DATE_ADDR  0x02
+#define REG_CTRL1_ADDR            0x00
+#define REG_CTRL2_ADDR            0x01
+#define REG_TIME_DATE_ADDR        0x02
+#define REG_ALARM_ADDR            0x09
+#define REG_OFFSET_ADDR           0x0D
+#define REG_TIMER_CLKOUT_ADDR     0x0E
+#define REG_COUNTDOWN_TIMER_ADDR  0x0F
 
 bool
-PCF2123_CtrlReg::get(int bit)
+PCF2123_CtrlRegs::get(int bit)
 {
-  return this->ctrl & (1 << bit);
+  if (bit > 7)
+    return this->ctrl[0] & (1 << (bit-8));
+
+  else
+    return this->ctrl[1] & (1 << bit);
 }
 
 bool
-PCF2123_CtrlReg::set(int bit, bool value)
+PCF2123_CtrlRegs::set(int bit, bool value)
 {
   bool old = this->get(bit);
-  if (value) this->ctrl |= (1 << bit);
-  else this->ctrl &= ~(1 << bit);
+
+  if (bit > 7)
+    this->ctrl[0] |= (1 << (bit-8));
+
+  else
+    this->ctrl[1] &= ~(1 << bit);
+
   return old;
 }
 
-uint8_t PCF2123_CtrlReg::ctrl1_get() { return this->ctrl >> 8;   }
-uint8_t PCF2123_CtrlReg::ctrl2_get() { return this->ctrl & 0xFF; }
-
-void PCF2123_CtrlReg::ctrl1_set(uint8_t byte)
+void PCF2123_CtrlRegs::mask_alarms()
 {
-  this->ctrl = (uint16_t)this->ctrl2_get() + ((uint16_t)byte << 8);
-}
-
-void PCF2123_CtrlReg::ctrl2_set(uint8_t byte)
-{
-  this->ctrl = ((uint16_t)this->ctrl1_get() << 8) + (uint16_t)byte;
-}
-
-void PCF2123_CtrlReg::mask_alarms()
-{
-  this.set(MSF, true);
-  this.set(AF, true);
-  this.set(TF, true);
+  this->set(MSF, true);
+  this->set(AF, true);
+  this->set(TF, true);
 }
 
 void
@@ -84,7 +84,10 @@ PCF2123::rxt(uint8_t *buf, size_t sz)
 
   SPI.beginTransaction(spi_cfg_);
   digitalWrite(ce_pin_, HIGH);
-  SPI.transfer(buf, sz);
+
+  for (size_t i = 0; i < sz; i++)
+    buf[i] = SPI.transfer(buf[i]);
+
   digitalWrite(ce_pin_, LOW);
   SPI.endTransaction();
 }
@@ -101,16 +104,16 @@ PCF2123::bcd_encode(uint8_t dec)
   return ((dec / 10) << 4) || (dec % 10);
 }
 
-PCF2123::PCF2123(uint8_t cs_pin)
-  : cs_pin_(cs_pin), spi_cfg_(SPI_MAX_SPEED, MSBFIRST, SPI_MODE0)
+PCF2123::PCF2123(uint8_t ce_pin)
+  : ce_pin_(ce_pin), spi_cfg_(SPI_MAX_SPEED, MSBFIRST, SPI_MODE0)
 {
-  pinMode(cs_pin_, OUTPUT);
-  digitalWrite(cs_pin_, LOW);
+  pinMode(ce_pin_, OUTPUT);
+  digitalWrite(ce_pin_, LOW);
 
   /* Make sure the clock is in 24h mode */
   PCF2123_CtrlRegs regs = this->ctrl_get();
-  regs.set(HOUR_MODE, 0);
-  this->ctrl_set(regs, true, false, true);
+  regs.set(PCF2123_CtrlRegs::HOUR_MODE, 0);
+  this->ctrl_set(&regs, true, false, true);
 }
 
 bool
@@ -119,7 +122,7 @@ PCF2123::time_get(tmElements_t *now)
   uint8_t buf[1+7];
 
   buf[0] = CMD_BYTE(CMD_READ, REG_TIME_DATE_ADDR);
-  rxt(buf, sizeof(buf));
+  this->rxt(buf, sizeof(buf));
 
   now->Second = bcd_decode(buf[1] & ~0x80);
   now->Minute = bcd_decode(buf[2] & ~0x80);
@@ -129,7 +132,7 @@ PCF2123::time_get(tmElements_t *now)
   now->Month  = bcd_decode(buf[6] & ~0xE0);
   now->Year   = bcd_decode(buf[7]);
 
-  return buf[1] & 0x80;
+  return !(buf[1] & 0x80);
 }
 
 void
@@ -142,29 +145,119 @@ PCF2123::time_set(tmElements_t *new_time)
   buf[2] = bcd_encode(new_time->Minute);
   buf[3] = bcd_encode(new_time->Hour);
   buf[4] = bcd_encode(new_time->Day);
-  buf[5] = bcd_encdoe(new_time->Wday);
+  buf[5] = bcd_encode(new_time->Wday);
   buf[6] = bcd_encode(new_time->Month);
   buf[7] = bcd_encode(new_time->Year);
 
-  rxt(buf, sizeof(buf));
+  this->rxt(buf, sizeof(buf));
 }
 
 void
 PCF2123::reset()
 {
-  uint8_t buf[2];
+  uint8_t buf[1+1];
   buf[0] = CMD_BYTE(CMD_WRITE, REG_CTRL1_ADDR);
   buf[1] = 0x58;
-  rxt(buf, sizeof(buf));
+  this->rxt(buf, sizeof(buf));
 }
 
-PCF2123::clock_stop(bool stopped)
+void
+PCF2123::stop(bool stopped)
 {
   PCF2123_CtrlRegs regs = ctrl_get();
-  regs.set(STOP, stopped);
+  regs.set(PCF2123_CtrlRegs::STOP, stopped);
   this->ctrl_set(&regs, true,  /* Write ctrl1 */
                         false, /* No ctrl2 */
                         true   /* Mask alarms */);
+}
+
+bool
+PCF2123::clkout_freq_set(uint16_t freq)
+{
+  uint8_t COF;
+  uint8_t buf[1+1];
+
+  switch (freq)
+  {
+    case 0:     COF = 7; break;
+    case 1:     COF = 6; break;
+    case 1024:  COF = 5; break;
+    case 2048:  COF = 4; break;
+    case 4096:  COF = 3; break;
+    case 8192:  COF = 2; break;
+    case 16384: COF = 1; break;
+    case 32768: COF = 0; break;
+    default: return false;
+  }
+
+  buf[0] = CMD_BYTE(CMD_READ, REG_TIMER_CLKOUT_ADDR);
+  this->rxt(buf, sizeof(buf));
+
+  buf[0] = CMD_BYTE(CMD_WRITE, REG_TIMER_CLKOUT_ADDR);
+  buf[1] &= ~0x70;
+  buf[1] |= COF << 4;
+  this->rxt(buf, sizeof(buf));
+
+  return true;
+}
+
+bool
+PCF2123::countdown_set(bool enable, CountdownSrcClock source_clock, uint8_t value)
+{
+  uint8_t buf[1+2];
+
+  if (source_clock < 0 || source_clock > 3)
+    return false;
+
+  buf[0] = CMD_BYTE(CMD_READ, REG_TIMER_CLKOUT_ADDR);
+  this->rxt(buf, 2);
+
+  /* First disable the countdown timer. */
+  buf[0] = CMD_BYTE(CMD_WRITE, REG_TIMER_CLKOUT_ADDR);
+  buf[1] &= ~0x08;
+  this->rxt(buf, 2);
+
+  /* The previous clobbered buf[1], so re-read */
+  buf[0] = CMD_BYTE(CMD_READ, REG_TIMER_CLKOUT_ADDR);
+  this->rxt(buf, 2);
+
+  /* Reconfigure timer */
+  buf[0] = CMD_BYTE(CMD_WRITE, REG_TIMER_CLKOUT_ADDR);
+  buf[1] = (buf[1] & ~0x08) | ((uint8_t)enable << 3);
+  buf[1] = (buf[1] & ~0x03) | source_clock;
+  buf[2] = value;
+  this->rxt(buf, 3);
+
+  return true;
+}
+
+uint8_t
+PCF2123::countdown_get()
+{
+  uint8_t buf[1+1];
+  buf[0] = CMD_BYTE(CMD_READ, REG_COUNTDOWN_TIMER_ADDR);
+  this->rxt(buf, sizeof(buf));
+  return buf[1];
+}
+
+bool
+PCF2123::alarm_set(int minute, int hour, int day, int weekday)
+{
+  uint8_t buf[1+4];
+
+  if ((minute < 0 || minute > 59) && minute != -1) return false;
+  if ((hour < 0 || hour > 23) && hour != -1) return false;
+  if ((day < 0 || day > 31) && day != -1) return false;
+  if ((weekday < 0 || weekday > 6) && weekday != -1) return false;
+
+  buf[0] = CMD_BYTE(CMD_WRITE, REG_ALARM_ADDR);
+  buf[1] = minute < 0 ? 0x80 : bcd_encode(minute);
+  buf[2] = hour < 0 ? 0x80 : bcd_encode(hour);
+  buf[3] = day < 0 ? 0x80 : bcd_encode(day);
+  buf[4] = weekday < 0 ? 0x80 : bcd_encode(weekday);
+  this->rxt(buf, sizeof(buf));
+
+  return true;
 }
 
 PCF2123_CtrlRegs
@@ -174,10 +267,10 @@ PCF2123::ctrl_get()
   PCF2123_CtrlRegs regs;
 
   buf[0] = CMD_BYTE(CMD_READ, REG_CTRL1_ADDR);
-  rxt(buf, sizeof(buf));
+  this->rxt(buf, sizeof(buf));
 
-  regs.ctrl1_set(buf[1]);
-  regs.ctrl2_set(buf[2]);
+  regs.ctrl[0] = buf[1];
+  regs.ctrl[1] = buf[2];
   return regs;
 }
 
@@ -193,22 +286,22 @@ PCF2123::ctrl_set(const PCF2123_CtrlRegs *regs,
   if (set_ctrl1 && set_ctrl2)
   {
     buf[0] = CMD_BYTE(CMD_WRITE, REG_CTRL1_ADDR);
-    buf[1] = regs->ctrl1_get();
-    buf[2] = regs->ctrl2_get();
+    buf[1] = regs->ctrl[0];
+    buf[2] = regs->ctrl[1];
     wrsz = 3;
   }
 
   else if (set_ctrl1)
   {
     buf[0] = CMD_BYTE(CMD_WRITE, REG_CTRL1_ADDR);
-    buf[1] = regs->ctrl1_get();
+    buf[1] = regs->ctrl[0];
     wrsz = 2;
   }
 
   else if (set_ctrl2)
   {
     buf[0] = CMD_BYTE(CMD_WRITE, REG_CTRL2_ADDR);
-    buf[1] = regs->ctrl2_get();
+    buf[1] = regs->ctrl[1];
     wrsz = 2;
   }
 
