@@ -1,3 +1,8 @@
+NOTE: BUILDS BUT NEVER TESTED YET.
+I will acquire the RTC next week to finish debug!
+
+==============================================================
+
 This is an Arduino IDE compatible SPI driver for the NXP
 Semiconductors PCF2123 real-time clock.
 
