@@ -1,11 +1,20 @@
-This is an Arduino IDE compatible driver for the NXP
+This is an Arduino IDE compatible SPI driver for the NXP
 Semiconductors PCF2123 real-time clock.
 
-PCF2123 is a low-power (sub-uA) RTC that supports a number
-of alarm features, as well as square wave clock signal
-output.
+PCF2123 is an "ultra" low-power (sub-uA) RTC that supports
+a number of alarm features, as well as square wave clock
+signal output.
 
-I wrote this because it was not possible to find a
-compatible RTC library that would directly support the
-PCF2123, especially with the alarm and signal generator
+This library provides access to nearly all of the RTC's
 features.
+
+This library depends on the LGPL-licensed Time library
+https://github.com/PaulStoffregen/Time
+
+Datasheet: http://www.nxp.com/documents/data_sheet/PCF2123.pdf
+
+PCF2123 supports tying MOSI and MISO together. This is
+supported in theory, by always writing zeroes when reading
+from slave. Then it's probably enough to connect a diode
+between controller MOSI and slave's MOSI+MISO to have this
+mode supported, but THIS HAS NOT BEEN TESTED.
