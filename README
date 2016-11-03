@@ -1,0 +1,11 @@
+This is an Arduino IDE compatible driver for the NXP
+Semiconductors PCF2123 real-time clock.
+
+PCF2123 is a low-power (sub-uA) RTC that supports a number
+of alarm features, as well as square wave clock signal
+output.
+
+I wrote this because it was not possible to find a
+compatible RTC library that would directly support the
+PCF2123, especially with the alarm and signal generator
+features.
