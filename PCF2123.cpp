@@ -28,7 +28,7 @@
 
 #define CMD_READ  1
 #define CMD_WRITE 0
-#define CMD_BYTE(RW, ADDR) (0x10 | ((!!(RW)) << 7) | (ADDR))
+#define CMD_BYTE(RW, ADDR) (0x10 | ((RW) ? 0x80 : 0x00) | (ADDR))
 
 #define REG_CTRL1_ADDR            0x00
 #define REG_CTRL2_ADDR            0x01
