@@ -254,7 +254,7 @@ class PCF2123
      * @param   set_ctrl2   Write ctrl2 register
      * @param   mask_alarms Set alarm bits high to not affect alarm state
      */
-    void ctrl_set(const PCF2123_CtrlRegs *regs, bool set_ctrl1, bool set_ctrl2,
+    void ctrl_set(PCF2123_CtrlRegs *regs, bool set_ctrl1, bool set_ctrl2,
                   bool mask_alarms);
 };
 

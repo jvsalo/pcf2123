@@ -275,13 +275,16 @@ PCF2123::ctrl_get()
 }
 
 void
-PCF2123::ctrl_set(const PCF2123_CtrlRegs *regs,
+PCF2123::ctrl_set(PCF2123_CtrlRegs *regs,
                   bool set_ctrl1,
                   bool set_ctrl2,
                   bool mask_alarms)
 {
   uint8_t buf[1+2];
   int wrsz;
+
+  if (mask_alarms)
+    regs->mask_alarms();
 
   if (set_ctrl1 && set_ctrl2)
   {
