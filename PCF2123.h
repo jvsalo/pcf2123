@@ -40,23 +40,23 @@ struct PCF2123_CtrlRegs
    * Enum values are bit positions into the registers.
    */
 
-  enum Ctrl1Regs {  EXT_TEST  = 7+8,  /* 0*: normal mode, 1: external clock test mode */
-                    STOP      = 5+8,  /* 0*: RTC clock runs, 1: RTC clock stopped */
-                    SR        = 4+8,  /* 0*: no software reset, 1: initiate software reset */
-                    HOUR_MODE = 2+8,  /* 0*: 24h mode, 1: 12h mode. We only use 24h mode */
-                    CIE       = 1+8   /* 0*: no correction interrupt generated, 1: pulse
+  enum Ctrl1Regs {  EXT_TEST  = 7,  /* 0*: normal mode, 1: external clock test mode */
+                    STOP      = 5,  /* 0*: RTC clock runs, 1: RTC clock stopped */
+                    SR        = 4,  /* 0*: no software reset, 1: initiate software reset */
+                    HOUR_MODE = 2,  /* 0*: 24h mode, 1: 12h mode. We only use 24h mode */
+                    CIE       = 1   /* 0*: no correction interrupt generated, 1: pulse
                                          generated at every correction cycle */
   };
 
-  enum Ctrl2Regs {  MI    = 7,  /* 0*: minute int. disabled, 1: minute int. enabled */
-                    SI    = 6,  /* 0*: second int. disabled, 1: second int. enabled */
-                    MSF   = 5,  /* 0*: no m/s int. generated, 1: int. has been generated */
-                    TI_TP = 4,  /* 0*: int. follows timer flags, 1: int. generates pulse */
-                    AF    = 3,  /* 0*: no alarm int. generated, 1: alarm triggered */
-                    TF    = 2,  /* 0*: no countdown int. generated, 1: countdown triggd */
-                    AIE   = 1,  /* 0*: don't generate alarm int., 1: generate alarm int. */
-                    TIE   = 0   /* 0*: don't generate countdown int., 1: generate countdown
-                                   int. */
+  enum Ctrl2Regs {  MI    = 7+8,  /* 0*: minute int. disabled, 1: minute int. enabled */
+                    SI    = 6+8,  /* 0*: second int. disabled, 1: second int. enabled */
+                    MSF   = 5+8,  /* 0*: no m/s int. generated, 1: int. has been generated */
+                    TI_TP = 4+8,  /* 0*: int. follows timer flags, 1: int. generates pulse */
+                    AF    = 3+8,  /* 0*: no alarm int. generated, 1: alarm triggered */
+                    TF    = 2+8,  /* 0*: no countdown int. generated, 1: countdown triggd */
+                    AIE   = 1+8,  /* 0*: don't generate alarm int., 1: generate alarm int. */
+                    TIE   = 0+8   /* 0*: don't generate countdown int., 1: generate countdown
+                                     int. */
   };
 
   uint8_t ctrl[2]; /**< Control registers 1 and 2 */

@@ -41,11 +41,7 @@
 bool
 PCF2123_CtrlRegs::get(int bit)
 {
-  if (bit > 7)
-    return this->ctrl[0] & (1 << (bit-8));
-
-  else
-    return this->ctrl[1] & (1 << bit);
+  return this->ctrl[bit/8] & (1 << (bit%8));
 }
 
 bool
@@ -53,16 +49,14 @@ PCF2123_CtrlRegs::set(int bit, bool value)
 {
   bool old = this->get(bit);
 
-  if (bit > 7)
-    this->ctrl[0] |= (1 << (bit-8));
-
-  else
-    this->ctrl[1] &= ~(1 << bit);
+  if (value) this->ctrl[bit/8] |=  (1 << (bit%8));
+  else       this->ctrl[bit/8] &= ~(1 << (bit%8));
 
   return old;
 }
 
-void PCF2123_CtrlRegs::mask_alarms()
+void
+PCF2123_CtrlRegs::mask_alarms()
 {
   this->set(MSF, true);
   this->set(AF, true);
