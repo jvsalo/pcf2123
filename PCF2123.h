@@ -10,8 +10,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -40,23 +40,25 @@ struct PCF2123_CtrlRegs
    * Enum values are bit positions into the registers.
    */
 
-  enum Ctrl1Regs {  EXT_TEST  = 7,  /* 0*: normal mode, 1: external clock test mode */
-                    STOP      = 5,  /* 0*: RTC clock runs, 1: RTC clock stopped */
-                    SR        = 4,  /* 0*: no software reset, 1: initiate software reset */
-                    HOUR_MODE = 2,  /* 0*: 24h mode, 1: 12h mode. We only use 24h mode */
-                    CIE       = 1   /* 0*: no correction interrupt generated, 1: pulse
-                                         generated at every correction cycle */
+  enum Ctrl1Regs {
+    EXT_TEST  = 7,  /* 0*: normal mode, 1: external clock test mode */
+    STOP      = 5,  /* 0*: RTC clock runs, 1: RTC clock stopped */
+    SR        = 4,  /* 0*: no software reset, 1: initiate software reset */
+    HOUR_MODE = 2,  /* 0*: 24h mode, 1: 12h mode. We only use 24h mode */
+    CIE       = 1   /* 0*: no correction interrupt generated, 1: pulse
+                       generated at every correction cycle */
   };
 
-  enum Ctrl2Regs {  MI    = 7+8,  /* 0*: minute int. disabled, 1: minute int. enabled */
-                    SI    = 6+8,  /* 0*: second int. disabled, 1: second int. enabled */
-                    MSF   = 5+8,  /* 0*: no m/s int. generated, 1: int. has been generated */
-                    TI_TP = 4+8,  /* 0*: int. follows timer flags, 1: int. generates pulse */
-                    AF    = 3+8,  /* 0*: no alarm int. generated, 1: alarm triggered */
-                    TF    = 2+8,  /* 0*: no countdown int. generated, 1: countdown triggd */
-                    AIE   = 1+8,  /* 0*: don't generate alarm int., 1: generate alarm int. */
-                    TIE   = 0+8   /* 0*: don't generate countdown int., 1: generate countdown
-                                     int. */
+  enum Ctrl2Regs {
+    MI    = 7+8,  /* 0*: minute int. disabled, 1: minute int. enabled */
+    SI    = 6+8,  /* 0*: second int. disabled, 1: second int. enabled */
+    MSF   = 5+8,  /* 0*: no m/s int. generated, 1: int. has been generated */
+    TI_TP = 4+8,  /* 0*: int. follows timer flags, 1: int. generates pulse */
+    AF    = 3+8,  /* 0*: no alarm int. generated, 1: alarm triggered */
+    TF    = 2+8,  /* 0*: no countdown int. generated, 1: countdown triggd */
+    AIE   = 1+8,  /* 0*: don't generate alarm int., 1: generate alarm int. */
+    TIE   = 0+8   /* 0*: don't generate countdown int., 1: generate countdown
+                     int. */
   };
 
   uint8_t ctrl[2]; /**< Control registers 1 and 2 */
@@ -202,7 +204,8 @@ class PCF2123
      *
      * @return  True if the given parameters were valid
      */
-    bool countdown_set(bool enable, CountdownSrcClock source_clock, uint8_t value);
+    bool countdown_set(bool enable, CountdownSrcClock source_clock,
+                       uint8_t value);
 
     /**
      * Get the current countdown timer value.
