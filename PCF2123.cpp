@@ -95,7 +95,7 @@ PCF2123::bcd_decode(uint8_t bcd)
 uint8_t
 PCF2123::bcd_encode(uint8_t dec)
 {
-  return ((dec / 10) << 4) || (dec % 10);
+  return ((dec / 10) << 4) | (dec % 10);
 }
 
 PCF2123::PCF2123(uint8_t ce_pin)
