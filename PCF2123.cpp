@@ -101,6 +101,8 @@ PCF2123::bcd_encode(uint8_t dec)
 PCF2123::PCF2123(uint8_t ce_pin)
   : ce_pin_(ce_pin), spi_cfg_(SPI_MAX_SPEED, MSBFIRST, SPI_MODE0)
 {
+  SPI.begin();
+
   pinMode(ce_pin_, OUTPUT);
   digitalWrite(ce_pin_, LOW);
 
