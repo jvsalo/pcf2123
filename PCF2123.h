@@ -96,19 +96,20 @@ struct PCF2123_CtrlRegs
 class PCF2123
 {
   private:
+    enum RxtMode { RXT_READ, RXT_WRITE } ;
+
     uint8_t       ce_pin_;    /**< Chip select pin */
     SPISettings   spi_cfg_;   /**< SPI configuration */
 
     /**
      * Do SPI transmit and receive.
      *
-     * Fill in buf[0] with the CMD_BYTE macro before
-     * calling.
-     *
+     * @param   addr    Register to access
+     * @param   rw      RXT_READ or RXT_WRITE
      * @param   buf     Buffer for reading/writing data
-     * @param   sz      Number of bytes to transact
+     * @param   sz      Number of bytes to transact (don't count command byte)
      */
-    void rxt(uint8_t *buf, size_t sz);
+    void rxt(uint8_t addr, uint8_t rw, uint8_t *buf, size_t sz);
 
     /**
      * Parse a BCD-encoded decimal into decimal.
