@@ -252,6 +252,9 @@ class PCF2123
      * Either ctrl1, ctrl2 or both can be written in the same
      * transaction.
      *
+     * The mask_alarms parameter makes it possible to make changes to the
+     * control registers without clobbering alarm state.
+     *
      * @param   regs        Register buffer
      * @param   set_ctrl1   Write ctrl1 register
      * @param   set_ctrl2   Write ctrl2 register
